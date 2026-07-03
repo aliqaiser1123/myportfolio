@@ -43,7 +43,10 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true },
   },
+  manifest: '/manifest.json',
 };
+
+import { SettingsProvider } from '@/components/effects/SettingsContext';
 
 export default function RootLayout({
   children,
@@ -53,14 +56,16 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} scroll-smooth`}>
       <body className={`${inter.className} bg-black text-white antialiased cursor-none`}>
-        <ScreenshotProvider>
-          <LoadingScreen />
-          <ScrollProgress />
-          <EasterEgg />
-          <CustomCursor />
-          <CommandPalette />
-          {children}
-        </ScreenshotProvider>
+        <SettingsProvider>
+          <ScreenshotProvider>
+            <LoadingScreen />
+            <ScrollProgress />
+            <EasterEgg />
+            <CustomCursor />
+            <CommandPalette />
+            {children}
+          </ScreenshotProvider>
+        </SettingsProvider>
       </body>
     </html>
   );

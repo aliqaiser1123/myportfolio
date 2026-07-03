@@ -386,7 +386,6 @@ accelerate innovation, and shape the future through Artificial Intelligence."`}
                 className="w-full bg-transparent outline-none text-white caret-white"
                 autoComplete="off"
                 spellCheck="false"
-                autoFocus
                 aria-label="Terminal input"
               />
               {/* Blinking cursor when empty */}

@@ -31,6 +31,8 @@ const navItems = [
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
+import { PushSubscribeButton } from '@/components/admin/PushSubscribeButton';
+
 export function AdminSidebar() {
   const pathname = usePathname();
 
@@ -61,6 +63,10 @@ export function AdminSidebar() {
           );
         })}
       </nav>
+      
+      <div className="mt-auto pt-4 border-t border-zinc-800">
+        <PushSubscribeButton />
+      </div>
     </aside>
   );
 }

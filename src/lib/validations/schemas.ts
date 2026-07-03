@@ -100,10 +100,11 @@ export const SocialLinkSchema = z.object({
 
 export const MessageSchema = z.object({
   id: z.string().optional(),
-  name: z.string().min(1, 'Name is required'),
-  email: z.string().email('Must be a valid email'),
-  subject: z.string().min(1, 'Subject is required'),
-  message: z.string().min(1, 'Message is required'),
+  name: z.string().optional(),
+  email: z.string().email('Must be a valid email').optional().or(z.literal('')),
+  whatsapp: z.string().optional(),
+  subject: z.string().optional(),
+  message: z.string().optional(),
   createdAt: z.date().optional(),
   read: z.boolean().default(false),
 });
@@ -120,4 +121,8 @@ export const SettingsSchema = z.object({
   siteDescription: z.string().optional(),
   seoKeywords: z.array(z.string()).optional(),
   maintenanceMode: z.boolean().default(false),
+  cyberMode: z.boolean().default(false),
+  matrixRainDensity: z.number().min(1).max(100).default(50),
+  cursorTrailStyle: z.enum(['none', 'glow', 'particles']).default('glow'),
+  neuralNetworkIntensity: z.number().min(1).max(100).default(60),
 });
