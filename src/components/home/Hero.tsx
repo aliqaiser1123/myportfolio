@@ -67,7 +67,7 @@ export function Hero() {
 
           {/* Image placeholder - requires actual background removed PNG */}
           <div className="absolute inset-0 rounded-full border border-white/10 bg-zinc-900/80 backdrop-blur-sm overflow-hidden flex items-center justify-center">
-            <img src="/avatar.png" alt="Ali Qaiser" className="object-cover w-full h-full" />
+            <img src="/avatar.png" alt="Muhammad Ali " className="object-cover w-full h-full" />
           </div>
         </motion.div>
 
