@@ -18,12 +18,12 @@ export function EasterEgg() {
   useEffect(() => {
     // Console ASCII Art
     const ascii = `
-   █████╗ ██╗    ██████╗  █████╗ ██╗███████╗███████╗██████╗ 
-  ██╔══██╗██║    ██╔══██╗██╔══██╗██║██╔════╝██╔════╝██╔══██╗
-  ███████║██║    ██████╔╝███████║██║███████╗█████╗  ██████╔╝
-  ██╔══██║██║    ██╔═══╝ ██╔══██║██║╚════██║██╔══╝  ██╔══██╗
-  ██║  ██║███████╗██║    ██║  ██║██║███████║███████╗██║  ██║
-  ╚═╝  ╚═╝╚══════╝╚═╝    ╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚═╝  ╚═╝
+   █████╗ ██╗     ██╗ 
+  ██╔══██╗██║     ██║
+  ███████║██║     ██║
+  ██╔══██║██║     ██║
+  ██║  ██║███████╗██║
+  ╚═╝  ╚═╝╚══════╝╚═╝
   
   Welcome to the Developer Console.
   Looking for secrets? Try the Konami Code.
@@ -90,7 +90,7 @@ export function EasterEgg() {
               backgroundImage: 'radial-gradient(circle, transparent 20%, #000 150%)'
             }}
           />
-          
+
           {/* Performance Monitor */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}

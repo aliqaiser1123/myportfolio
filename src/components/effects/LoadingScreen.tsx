@@ -37,7 +37,7 @@ export function LoadingScreen() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-center"
           >
-            <div className="text-5xl font-black tracking-tighter text-white mb-2">ALI QAISER</div>
+            <div className="text-5xl font-black tracking-tighter text-white mb-2">MUHAMMAD ALI QAISER</div>
             <div className="text-xs text-zinc-600 uppercase tracking-[0.4em]">AI Engineer</div>
           </motion.div>
 

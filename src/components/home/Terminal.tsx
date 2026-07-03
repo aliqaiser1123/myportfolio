@@ -2,79 +2,91 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useSupabase } from '@/hooks/useSupabase';
-import { Profile } from '@/types';
 
 type CommandHistory = {
   command: string;
   output: React.ReactNode;
 };
 
-// Hardcoded fallback profile data
-const FALLBACK_PROFILE = {
-  fullName: 'Muhammad Ali Qaiser',
-  headline: 'AI Engineer · Computer Vision · LLM Engineering · Information Retrieval',
-  location: 'Pakistan 🇵🇰',
-  bio: `Passionate AI Engineer with hands-on expertise in building intelligent systems
-at the intersection of research and production. Specializing in Computer Vision,
-Large Language Model (LLM) Engineering, and Information Retrieval.
-
-I craft scalable ML pipelines, vision transformers, RAG architectures, and
-neural search systems — turning cutting-edge research into real-world impact.`,
-};
-
 const COMMANDS = [
-  { cmd: 'whoami',      desc: 'Display identity & role' },
+  { cmd: 'whoami', desc: 'Display identity & role' },
   { cmd: 'cat resume.md', desc: 'Read professional summary' },
-  { cmd: 'ls',          desc: 'List workspace files' },
-  { cmd: 'skills',      desc: 'Show tech stack & expertise' },
-  { cmd: 'contact',     desc: 'Get contact information' },
-  { cmd: 'projects',    desc: 'List featured projects' },
-  { cmd: 'education',   desc: 'Academic background' },
+  { cmd: 'ls', desc: 'List workspace files' },
+  { cmd: 'skills', desc: 'Show tech stack & expertise' },
+  { cmd: 'contact', desc: 'Get contact information' },
+  { cmd: 'projects', desc: 'List featured projects' },
+  { cmd: 'education', desc: 'Academic background' },
+  { cmd: 'matrix', desc: 'Enter the Matrix' },
   { cmd: 'sudo rm -rf /', desc: 'Nuke everything (try it 😈)' },
-  { cmd: 'clear',       desc: 'Clear terminal screen' },
+  { cmd: 'clear', desc: 'Clear terminal screen' },
 ];
 
+
+const HELP_OUTPUT = (
+  <div className="text-zinc-400 space-y-1 mt-1">
+    <div className="text-green-400 font-bold mb-2 text-xs uppercase tracking-widest">Available Commands</div>
+    {COMMANDS.map(({ cmd: c, desc }) => (
+      <div key={c} className="flex gap-3">
+        <span className="text-blue-400 font-bold w-36 shrink-0">{c}</span>
+        <span className="text-zinc-500">{desc}</span>
+      </div>
+    ))}
+  </div>
+);
+const MATRIX_CHARS =
+  "アイウエオカキクケコサシスセソ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$%&*";
+
+const MatrixRain = () => {
+  const columns = 30;
+
+  return (
+    <div className="relative overflow-hidden rounded-md bg-black border border-zinc-800 h-80 mt-2">
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black z-10" />
+
+      <div className="absolute inset-0 flex justify-between px-1">
+        {Array.from({ length: columns }).map((_, i) => {
+          const text = Array.from({ length: 45 })
+            .map(
+              () =>
+                MATRIX_CHARS[
+                Math.floor(Math.random() * MATRIX_CHARS.length)
+                ]
+            )
+            .join("\n");
+
+          return (
+            <div
+              key={i}
+              className="matrix-column text-[11px] leading-[10px]"
+              style={{
+                animationDuration: `${4 + Math.random() * 6}s`,
+                animationDelay: `${Math.random() * 5}s`,
+              }}
+            >
+              {text}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 text-green-400 text-xs font-mono tracking-widest">
+        ACCESSING THE MATRIX...
+      </div>
+    </div>
+  );
+};
 export function Terminal() {
-  const { data: profiles, loading } = useSupabase<Profile>('profile');
-  const [history, setHistory] = useState<CommandHistory[]>([]);
+  // Boot with `help` pre-shown — recruiters immediately see available commands
+  const [history, setHistory] = useState<CommandHistory[]>([
+    { command: 'help', output: HELP_OUTPUT },
+  ]);
   const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(true);
+  const [isTyping] = useState(false);
   const [cmdIndex, setCmdIndex] = useState(-1);
   const [cmdBuffer, setCmdBuffer] = useState('');
   const [userHistory, setUserHistory] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  // Prefer Supabase data, fall back to hardcoded
-  const rawProfile = profiles[0];
-  const profile = rawProfile ?? FALLBACK_PROFILE;
-
-  // Initial boot sequence
-  useEffect(() => {
-    if (loading) return;
-    const initialCmd = 'whoami';
-    let currentIndex = 0;
-    let typed = '';
-
-    const typingInterval = setInterval(() => {
-      if (currentIndex < initialCmd.length) {
-        typed += initialCmd[currentIndex];
-        setInput(typed);
-        currentIndex++;
-      } else {
-        clearInterval(typingInterval);
-        setTimeout(() => {
-          handleCommand(initialCmd, profile);
-          setIsTyping(false);
-          setInput('');
-        }, 300);
-      }
-    }, 100);
-
-    return () => clearInterval(typingInterval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading]);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -82,23 +94,13 @@ export function Terminal() {
     }
   }, [history]);
 
-  const handleCommand = (cmd: string, profileData = profile) => {
+  const handleCommand = (cmd: string) => {
     const trimmed = cmd.trim().toLowerCase();
     let output: React.ReactNode = null;
 
     switch (trimmed) {
       case 'help':
-        output = (
-          <div className="text-zinc-400 space-y-1 mt-1">
-            <div className="text-green-400 font-bold mb-2 text-xs uppercase tracking-widest">Available Commands</div>
-            {COMMANDS.map(({ cmd: c, desc }) => (
-              <div key={c} className="flex gap-3">
-                <span className="text-blue-400 font-bold w-36 shrink-0">{c}</span>
-                <span className="text-zinc-500">{desc}</span>
-              </div>
-            ))}
-          </div>
-        );
+        output = HELP_OUTPUT;
         break;
 
       case 'whoami':
@@ -106,15 +108,19 @@ export function Terminal() {
           <div className="space-y-1.5 mt-1">
             <div className="flex gap-3">
               <span className="text-blue-400 font-semibold w-20 shrink-0">Name:</span>
-              <span className="text-white font-bold">{profileData.fullName}</span>
+              <span className="text-white font-bold">Muhammad Ali</span>
             </div>
             <div className="flex gap-3">
               <span className="text-blue-400 font-semibold w-20 shrink-0">Role:</span>
-              <span className="text-zinc-200">{profileData.headline}</span>
+              <span className="text-zinc-200">AI Student · Computer Vision · LLM · Information Retrieval</span>
             </div>
             <div className="flex gap-3">
               <span className="text-blue-400 font-semibold w-20 shrink-0">Location:</span>
-              <span className="text-zinc-300">{profileData.location || FALLBACK_PROFILE.location}</span>
+              <span className="text-zinc-300">Pakistan 🇵🇰</span>
+            </div>
+            <div className="flex gap-3">
+              <span className="text-blue-400 font-semibold w-20 shrink-0">Phone:</span>
+              <span className="text-green-400">+923106643436</span>
             </div>
             <div className="flex gap-3">
               <span className="text-blue-400 font-semibold w-20 shrink-0">Email:</span>
@@ -149,7 +155,13 @@ export function Terminal() {
           <div className="mt-1 space-y-3">
             <div className="text-xs text-zinc-600 uppercase tracking-widest font-mono">─── resume.md ───</div>
             <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap pl-4 border-l-2 border-zinc-700 text-sm">
-              {profileData.bio || FALLBACK_PROFILE.bio}
+              {`I am an AI student focused on exploring emerging technologies, intelligent
+systems, and space innovation. I enjoy building AI-powered applications,
+learning cutting-edge technologies, and turning ambitious ideas into
+impactful solutions.
+
+Vision: "Driven to build intelligent technologies that empower humanity,
+accelerate innovation, and shape the future through Artificial Intelligence."`}
             </p>
           </div>
         );
@@ -159,10 +171,11 @@ export function Terminal() {
         output = (
           <div className="mt-1 space-y-3">
             {[
-              { cat: 'AI / ML', items: ['PyTorch', 'TensorFlow', 'Transformers (HuggingFace)', 'Scikit-learn', 'OpenCV'] },
-              { cat: 'LLM & RAG', items: ['LangChain', 'LlamaIndex', 'OpenAI API', 'vLLM', 'Ollama', 'FAISS', 'Qdrant'] },
-              { cat: 'Computer Vision', items: ['YOLO', 'ViT', 'Detectron2', 'Stable Diffusion', 'CLIP'] },
-              { cat: 'Engineering', items: ['Python', 'FastAPI', 'Next.js', 'TypeScript', 'Docker', 'Supabase'] },
+              { cat: 'Languages', items: ['Python', 'C++', 'SQL'] },
+              { cat: 'AI / ML', items: ['PyTorch', 'Scikit-learn', 'NLP', 'Computer Vision', 'Neural Networks'] },
+              { cat: 'LLM & RAG', items: ['RAG', 'LangChain', 'ChromaDB'] },
+              { cat: 'Backend', items: ['FastAPI', 'REST APIs', 'Firebase', 'Firestore'] },
+              { cat: 'Tools', items: ['Git', 'GitHub', 'Streamlit', 'Antigravity', 'VS Code'] },
             ].map(({ cat, items }) => (
               <div key={cat}>
                 <div className="text-blue-400 font-semibold text-xs uppercase tracking-wider mb-1">{cat}</div>
@@ -183,23 +196,19 @@ export function Terminal() {
         output = (
           <div className="mt-1 space-y-1.5">
             <div className="flex gap-3">
-              <span className="text-blue-400 font-semibold w-16 shrink-0">Email:</span>
+              <span className="text-blue-400 font-semibold w-20 shrink-0">Email:</span>
               <span className="text-green-400">aliqaiser1123@gmail.com</span>
             </div>
             <div className="flex gap-3">
-              <span className="text-blue-400 font-semibold w-16 shrink-0">Discord:</span>
-              <span className="text-zinc-300">@aliqaiser_discord</span>
+              <span className="text-blue-400 font-semibold w-20 shrink-0">Phone:</span>
+              <span className="text-green-400">+923106643436</span>
             </div>
             <div className="flex gap-3">
-              <span className="text-blue-400 font-semibold w-16 shrink-0">LinkedIn:</span>
-              <span className="text-zinc-300">linkedin.com/in/aliqaiser</span>
+              <span className="text-blue-400 font-semibold w-20 shrink-0">GitHub:</span>
+              <span className="text-zinc-300">github.com/aliqaiser1123</span>
             </div>
             <div className="flex gap-3">
-              <span className="text-blue-400 font-semibold w-16 shrink-0">GitHub:</span>
-              <span className="text-zinc-300">github.com/aliqaiser</span>
-            </div>
-            <div className="flex gap-3">
-              <span className="text-blue-400 font-semibold w-16 shrink-0">Location:</span>
+              <span className="text-blue-400 font-semibold w-20 shrink-0">Location:</span>
               <span className="text-zinc-300">Pakistan 🇵🇰</span>
             </div>
           </div>
@@ -210,9 +219,31 @@ export function Terminal() {
         output = (
           <div className="mt-1 space-y-3">
             {[
-              { name: 'AI Vision Pipeline', desc: 'Real-time object detection & tracking system using YOLO + DeepSort', stack: 'PyTorch · OpenCV · FastAPI' },
-              { name: 'RAG Knowledge Engine', desc: 'LLM-powered document QA with hybrid semantic search', stack: 'LangChain · FAISS · OpenAI' },
-              { name: 'Neural Search System', desc: 'Dense retrieval for large-scale information retrieval', stack: 'Sentence-BERT · Qdrant · FastAPI' },
+              {
+                name: 'Brain Tumor Classifier',
+                desc: 'MRI tumor classification using deep learning and Grad-CAM explainability.',
+                stack: 'PyTorch · Computer Vision · Grad-CAM',
+              },
+              {
+                name: 'Siesmoguard AI',
+                desc: 'AI-powered earthquake prediction platform with intelligent alerts.',
+                stack: 'Python · ML · FastAPI',
+              },
+              {
+                name: 'Quran Semantics Engine',
+                desc: 'Semantic search system using information retrieval and NLP.',
+                stack: 'NLP · RAG · ChromaDB · LangChain',
+              },
+              {
+                name: 'Islamic RAG Agent',
+                desc: 'Evidence-based AI assistant powered by RAG and LLMs.',
+                stack: 'LangChain · ChromaDB · FastAPI',
+              },
+              {
+                name: 'Pak Burger Website',
+                desc: 'Modern food ordering platform with live order management.',
+                stack: 'Next.js · Firebase · Firestore',
+              },
             ].map(p => (
               <div key={p.name} className="pl-3 border-l border-zinc-700 space-y-0.5">
                 <div className="text-white font-semibold">{p.name}</div>
@@ -229,19 +260,27 @@ export function Terminal() {
         output = (
           <div className="mt-1 space-y-3">
             <div className="pl-3 border-l border-zinc-700 space-y-0.5">
-              <div className="text-white font-semibold">BS Computer Science</div>
-              <div className="text-zinc-400 text-xs">Focus: Artificial Intelligence & Machine Learning</div>
-              <div className="text-blue-400 text-xs font-mono">Pakistan · 2020–2024</div>
+              <div className="text-white font-semibold">BS Artificial Intelligence</div>
+              <div className="text-zinc-400 text-xs">Air University · Expected 2028</div>
+              <div className="text-zinc-400 text-xs">
+                Hands-on experience in Computer Vision, Machine &amp; Deep Learning,
+                Information Retrieval, and Large Language Models (LLMs).
+              </div>
+              <div className="text-blue-400 text-xs font-mono">Pakistan · 2024–2028</div>
             </div>
             <div className="pl-3 border-l border-zinc-700 space-y-0.5">
-              <div className="text-white font-semibold">Certifications</div>
-              <div className="text-zinc-400 text-xs">Deep Learning Specialization · Andrew Ng (Coursera)</div>
-              <div className="text-zinc-400 text-xs">LLM Engineering · Various Advanced Courses</div>
+              <div className="text-white font-semibold">Highlights</div>
+              <div className="text-zinc-400 text-xs">Built 5+ AI &amp; Full-Stack Projects</div>
+              <div className="text-zinc-400 text-xs">Developed production-ready AI applications</div>
+              <div className="text-zinc-400 text-xs">Hands-on experience in Computer Vision &amp; LLMs</div>
+              <div className="text-zinc-400 text-xs">Strong grip on Information Retrieval &amp; RAG</div>
             </div>
           </div>
         );
         break;
-
+      case 'matrix':
+        output = <MatrixRain />;
+        break;
       case 'sudo rm -rf /':
         output = (
           <div className="text-red-500 font-bold animate-pulse mt-1">
@@ -318,21 +357,6 @@ export function Terminal() {
           ref={containerRef}
           className="p-6 font-mono text-sm md:text-base h-[460px] overflow-y-auto cursor-text scrollbar-thin scrollbar-thumb-zinc-800"
         >
-          {loading && (
-            <div className="text-zinc-500 animate-pulse mb-4 flex items-center gap-2">
-              <span className="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              Initializing AI Engine...
-            </div>
-          )}
-
-          {/* Startup banner (shown once) */}
-          {!loading && history.length === 0 && (
-            <div className="text-zinc-700 text-xs mb-4 space-y-0.5">
-              <div>Ali&apos;s Portfolio OS v2.0.25 — Kernel: NeuralNet 4.2</div>
-              <div>Type <span className="text-blue-400">help</span> to see available commands.</div>
-            </div>
-          )}
-
           {/* History */}
           {history.map((item, i) => (
             <div key={i} className="mb-4">
@@ -347,36 +371,34 @@ export function Terminal() {
           ))}
 
           {/* Current Input */}
-          {!loading && (
-            <form onSubmit={onSubmit} className="flex items-center gap-2 text-zinc-300">
-              <span className="text-green-400 font-bold shrink-0">ali@ai-portfolio</span>
-              <span className="text-blue-400 shrink-0">~</span>
-              <span className="text-zinc-500 shrink-0">$</span>
-              <div className="relative flex-1 flex items-center">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={onKeyDown}
-                  disabled={isTyping}
-                  className="w-full bg-transparent outline-none text-white caret-white"
-                  autoComplete="off"
-                  spellCheck="false"
-                  autoFocus
-                  aria-label="Terminal input"
+          <form onSubmit={onSubmit} className="flex items-center gap-2 text-zinc-300">
+            <span className="text-green-400 font-bold shrink-0">ali@ai-portfolio</span>
+            <span className="text-blue-400 shrink-0">~</span>
+            <span className="text-zinc-500 shrink-0">$</span>
+            <div className="relative flex-1 flex items-center">
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={onKeyDown}
+                disabled={isTyping}
+                className="w-full bg-transparent outline-none text-white caret-white"
+                autoComplete="off"
+                spellCheck="false"
+                autoFocus
+                aria-label="Terminal input"
+              />
+              {/* Blinking cursor when empty */}
+              {input === '' && (
+                <motion.span
+                  animate={{ opacity: [1, 0] }}
+                  transition={{ duration: 0.8, repeat: Infinity }}
+                  className="w-2 h-5 bg-white inline-block ml-0.5 align-middle absolute left-0"
                 />
-                {/* Blinking cursor when empty */}
-                {input === '' && (
-                  <motion.span
-                    animate={{ opacity: [1, 0] }}
-                    transition={{ duration: 0.8, repeat: Infinity }}
-                    className="w-2 h-5 bg-white inline-block ml-0.5 align-middle absolute left-0"
-                  />
-                )}
-              </div>
-            </form>
-          )}
+              )}
+            </div>
+          </form>
         </div>
       </div>
     </section>
