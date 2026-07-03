@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if the user is the admin
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'aliqaiser1123@gmail.com';
+    }
+
+    // By default, anyone can read, but only the admin can write
+    match /{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Specifically for messages (contact form), anyone can create, but only admin can read/update/delete
+    match /messages/{messageId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}
