@@ -2,15 +2,18 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import webpush from 'web-push';
 
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT || 'mailto:admin@example.com',
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
-  process.env.VAPID_PRIVATE_KEY || ''
-);
-
 export async function POST(req: Request) {
   try {
     const data = await req.json();
+
+    // Initialize VAPID inside the handler so env vars are available at runtime
+    const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+    const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:admin@example.com';
+    const vapidReady = vapidPublicKey && vapidPrivateKey;
+    if (vapidReady) {
+      webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+    }
     const supabase = await createClient();
 
     // 1. Insert message into Supabase
@@ -38,7 +41,7 @@ export async function POST(req: Request) {
       .from('push_subscriptions')
       .select('*');
 
-    if (!subError && subscriptions && subscriptions.length > 0) {
+    if (vapidReady && !subError && subscriptions && subscriptions.length > 0) {
       // 3. Send Web Push to all endpoints
       const notificationPayload = JSON.stringify({
         title: 'New Message Received',
