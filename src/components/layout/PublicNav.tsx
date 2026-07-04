@@ -1,15 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
-import { Command, Download, Moon, Sun, Lock } from 'lucide-react';
+import { Command, Download, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+// 1. Import your custom Supabase hook and types
+import { useSupabase } from '@/hooks/useSupabase';
+import { Resume as ResumeType } from '@/types';
 
 export function PublicNav() {
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  // 2. Fetch the resume data inside the navbar component
+  const { data: resumes } = useSupabase<ResumeType>('resume', 'last_updated', false);
+  const resume = resumes?.[0];
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = scrollY.getPrevious() || 0;
@@ -21,6 +28,20 @@ export function PublicNav() {
     setScrolled(latest > 50);
   });
 
+  // 3. Helper function to trigger the download when clicked
+  const handleDownload = () => {
+    if (resume?.pdfUrl) {
+      const link = document.createElement('a');
+      link.href = resume.pdfUrl;
+      link.download = '';
+      link.target = '_blank';
+      link.rel = 'noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   return (
     <motion.nav
       variants={{
@@ -29,9 +50,8 @@ export function PublicNav() {
       }}
       animate={hidden ? "hidden" : "visible"}
       transition={{ duration: 0.35, ease: "easeInOut" }}
-      className={`fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 py-4 transition-all duration-300 ${
-        scrolled ? "bg-black/40 backdrop-blur-md border-b border-white/10" : "bg-transparent"
-      }`}
+      className={`fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 py-4 transition-all duration-300 ${scrolled ? "bg-black/40 backdrop-blur-md border-b border-white/10" : "bg-transparent"
+        }`}
     >
       <div className="flex items-center gap-4 z-50">
         <Link href="/" className="flex items-center gap-2">
@@ -57,7 +77,14 @@ export function PublicNav() {
           <Command size={14} />
           <span className="text-xs text-zinc-400 border border-zinc-700 rounded px-1 ml-2">⌘K</span>
         </Button>
-        <Button size="sm" className="bg-white text-black hover:bg-zinc-200">
+
+        {/* 4. Updated Button with disabled state and click handler */}
+        <Button
+          size="sm"
+          className="bg-white text-black hover:bg-zinc-200 disabled:opacity-50"
+          onClick={handleDownload}
+          disabled={!resume?.pdfUrl}
+        >
           <Download size={14} className="mr-2" />
           Resume
         </Button>
