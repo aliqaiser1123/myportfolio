@@ -1,15 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import { Command, Download, Moon, Sun, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSupabase } from '@/hooks/useSupabase';
+import { Resume as ResumeType } from '@/types';
 
 export function PublicNav() {
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  
+  const { data: resumes } = useSupabase<ResumeType>('resume', 'last_updated', false);
+  const resumeUrl = resumes?.[0]?.pdfUrl;
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = scrollY.getPrevious() || 0;
@@ -57,10 +62,19 @@ export function PublicNav() {
           <Command size={14} />
           <span className="text-xs text-zinc-400 border border-zinc-700 rounded px-1 ml-2">⌘K</span>
         </Button>
-        <Button size="sm" className="bg-white text-black hover:bg-zinc-200">
-          <Download size={14} className="mr-2" />
-          Resume
-        </Button>
+        {resumeUrl ? (
+          <a href={resumeUrl} download target="_blank" rel="noreferrer">
+            <Button size="sm" className="bg-white text-black hover:bg-zinc-200">
+              <Download size={14} className="mr-2" />
+              Resume
+            </Button>
+          </a>
+        ) : (
+          <Button size="sm" className="bg-white text-black hover:bg-zinc-200 opacity-50 cursor-not-allowed">
+            <Download size={14} className="mr-2" />
+            Resume
+          </Button>
+        )}
       </div>
     </motion.nav>
   );
